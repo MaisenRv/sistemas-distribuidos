@@ -7,9 +7,9 @@ class IndexServer(Node):
         super().__init__()
         self.__current_node = ''
         self.__numbers = self.__generate_numbers(client_number)
-        self.__start_server(hostname,port,client_number)
+        self.__register(hostname,port,client_number)
         
-    def __start_server(self,hostname:str, port:int, client_number:int):
+    def __register(self,hostname:str, port:int, client_number:int):
         #start server
         server_socket = socket.socket()
         server_socket.bind((hostname,port))
@@ -60,15 +60,6 @@ class IndexServer(Node):
             #random.shuffle(self.__numbers)
         return selected_numbers
 
-    # def __stop_server(self):
-    #     ips = list(self._node_list.keys())
-    #     last_connection = socket.socket()
-    #     last_connection.connect((ips[0], self._node_list[ips[0]]['port']))
-    #     message = self._create_message({
-    #         'state':'start',
-    #     })
-    #     last_connection.send(message)
-    #     last_connection.close()
 
 
 def main():

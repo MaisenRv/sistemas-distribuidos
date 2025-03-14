@@ -38,6 +38,7 @@ class Client(Node):
 
         self.__start_to_listen()
 
+# Mejor hacer con hilos actulizar nodos y otro para lo demas
     def __start_to_listen(self):
         client_socket = socket.socket()
         my_ip = socket.gethostbyname(socket.gethostname())
@@ -155,7 +156,6 @@ class Client(Node):
     def __check_numbers(self, numbers:list):
         numbers_checked = []
         for mn in self.__missing_numbers:
-            # if mn in numbers and not (mn in numbers_checked):
             if mn in numbers:
                 numbers_checked.append(mn)
             
