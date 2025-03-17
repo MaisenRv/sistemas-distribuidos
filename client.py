@@ -3,16 +3,32 @@ from node import Node
 
 class Client(Node):
 
-    def __init__(self,hostname:str, server_port:int, name:str, my_port:int):
+    def __init__(self,hostname:str, server_port:int, name:str, my_port:int) -> None:
         super().__init__()
+        # client info
         self.__name = name
         self.__my_port = my_port
+        self.__my_ip = socket.gethostbyname(socket.gethostname())
         self.__my_numbers = []
         self.__extra_numbers = []
         self.__missing_numbers = []
         self.__my_numbers_copy = []
-        self.__connect_index_server(hostname,server_port)
-    
+        self.__max_clients = 0
+        # server info
+        self.__server_info = {'hostname':hostname, 'port':server_port}
+
+    def start(self):
+        self.__connect_index_server(self.__server_info['hostname'],self.__server_info['port'])
+        if len(self._node_list) < self.__max_clients:
+            self.__update_list()
+
+        ips = list(self._node_list.keys())
+        if ips[0] != self.__my_ip:
+            self.__listen()
+            return
+        time.sleep(5)
+        self.__resolve_numbers()
+
     def __connect_index_server(self,hostname:str, server_port:int):
         res = self._make_request(
             hostname,
@@ -21,57 +37,51 @@ class Client(Node):
             {
                 'name': self.__name,
                 'port': self.__my_port
-            }
+            } 
         )
 
-        self._node_list = res['nodes']
-        self.__my_numbers = res['numbers']
+        self._node_list = res['data']['nodes']
+        self.__my_numbers = res['data']['numbers']
+        self.__max_clients = res['data']['max_clients']
         self.__my_numbers.sort()
         self.__my_numbers_copy = self.__my_numbers.copy()
 
         # Show info
         os.system('clear')
         self.__handle_numbers()
-
         print('-- FIRST CONNECT --')
         self._print_nodes()
 
-        self.__start_to_listen()
-
-# Mejor hacer con hilos actulizar nodos y otro para lo demas
-    def __start_to_listen(self):
+    def __update_list(self):
         client_socket = socket.socket()
-        my_ip = socket.gethostbyname(socket.gethostname())
-        client_socket.bind((my_ip,self.__my_port))
+        client_socket.bind((self.__my_ip,self.__my_port))
         client_socket.listen(2)
         while True:
             conn, address = client_socket.accept()
-            waiting_info = self._receive_message(conn)
-
-            if waiting_info['state'] == 'update':
-
-                self._node_list = waiting_info['data']
-
+            info = self._receive(conn)
+            
+            if info['state'] == 'update':
+                self._node_list = info['data']['nodes']
                 self.__show_info()
                 print('-- NODE LIST UPDATE --')
                 self._print_nodes()
-
-            elif waiting_info['state'] == 'start':
-
-                time.sleep(1)
-                del self._node_list[my_ip]
-                print('-- UPDATING CLIENTS --')
-                self._update_all_clients(my_ip)
                 conn.close()
-                if self._node_list:
-                    self.__resolve_numbers()
-                else:
-                    self.__show_info()
+            if len(self._node_list) == self.__max_clients:
+                conn.close()
                 break
-            
-            elif waiting_info['state'] == 'get_extra_numbers':
-                data = self._create_message(self.__extra_numbers)
-                conn.send(data)
+        client_socket.close()
+
+
+    def __listen(self):
+        client_socket = socket.socket()
+        client_socket.bind((self.__my_ip,self.__my_port))
+        client_socket.listen(2)
+        while True:
+            conn, address = client_socket.accept()
+            waiting_info = self._receive(conn)
+
+            if waiting_info['state'] == 'get_extra_numbers':
+                self._send(conn,'',{'extra_numbers':self.__extra_numbers})
             
             elif waiting_info['state'] == 'swap':
                 get_numbers = waiting_info['data']['get_numbers']
@@ -81,62 +91,76 @@ class Client(Node):
                 self.__extra_numbers.extend(send_numbers)
                 self.__handle_numbers()
                 self.__show_info()
+                self._send(conn,'swapped',{})
+            
+            elif waiting_info['state'] == 'completed_node':
+                self._node_list[waiting_info['data']['node']]['completed'] = True
+                self._print_nodes()
 
-                data = self._create_message({'state':'swapped'})
-                conn.send(data)
-
-
+            elif waiting_info['state'] == 'start':
+                ips = list(self._node_list.keys())
+                if ips[-1] != self.__my_ip:
+                    self.__resolve_numbers()
+                break
             conn.close()
+        client_socket.close()
     
     def __resolve_numbers(self):
-        while True:
-            for client in self._node_list:
-                res = self._make_request(
-                    client,
-                    self._node_list[client]['port'],
-                    'get_extra_numbers',
-                    None
-                )
-                numbers_checked = self.__check_numbers(res)
-                if not numbers_checked:
-                    continue
-                
-                print(f"Found this numbers : {numbers_checked} in client {(self._node_list[client]['name']).upper()}")
-                time.sleep(10)
+        for client in self._node_list:
+            if (client == self.__my_ip) or (self._node_list[client]['completed'] == True):
+                continue
+            
+            res = self._make_request(
+                client,
+                self._node_list[client]['port'],
+                'get_extra_numbers',
+                {}
+            )
 
-                swap_numbers = []
-                
-                numbers_checked_copy = numbers_checked.copy()
-                if len(numbers_checked) > len(self.__extra_numbers):
-                    numbers_checked.clear()
+            numbers_checked = self.__check_numbers(res['data']['extra_numbers'])
 
-                    for i in range(len(self.__extra_numbers)):
-                        swap_numbers.append(self.__extra_numbers[i])
-                        numbers_checked.append(numbers_checked_copy[i])
-                        numbers_checked_copy.remove(numbers_checked[i])
+            if not numbers_checked:
+                continue
+            
+            print(f"Found this numbers : {numbers_checked} in client {(self._node_list[client]['name']).upper()}")
+            time.sleep(10)
 
-                    self.__swap_numbers(client,self._node_list[client]['port'],numbers_checked,swap_numbers)
+            swap_numbers = []
+            
+            numbers_checked_copy = numbers_checked.copy()
+            if len(numbers_checked) > len(self.__extra_numbers):
+                numbers_checked.clear()
+
+                for i in range(len(self.__extra_numbers)):
+                    swap_numbers.append(self.__extra_numbers[i])
+                    numbers_checked.append(numbers_checked_copy[i])
+                    numbers_checked_copy.remove(numbers_checked[i])
+
+                self.__swap_numbers(client,self._node_list[client]['port'],numbers_checked,swap_numbers)
+                time.sleep(1)
+
+                if not self.__extra_numbers and self.__missing_numbers:
+                    self.__swap_numbers(client,self._node_list[client]['port'],numbers_checked_copy,[])
                     time.sleep(1)
 
-                    if not self.__extra_numbers and self.__missing_numbers:
-                        self.__swap_numbers(client,self._node_list[client]['port'],numbers_checked_copy,[])
-                        time.sleep(1)
 
+            if len(numbers_checked) <= len(self.__extra_numbers):
+                for i in range(len(numbers_checked)):
+                    swap_numbers.append(self.__extra_numbers[i])
+                self.__swap_numbers(client,self._node_list[client]['port'],numbers_checked,swap_numbers)
+                time.sleep(1)
 
-                if len(numbers_checked) <= len(self.__extra_numbers):
-                    for i in range(len(numbers_checked)):
-                        swap_numbers.append(self.__extra_numbers[i])
-                    self.__swap_numbers(client,self._node_list[client]['port'],numbers_checked,swap_numbers)
-                    time.sleep(1)
-
-                if not self.__missing_numbers and self.__extra_numbers:
-                    self.__swap_numbers(client,self._node_list[client]['port'],[],self.__extra_numbers)
-                
+            if not self.__missing_numbers and self.__extra_numbers:
+                self.__swap_numbers(client,self._node_list[client]['port'],[],self.__extra_numbers)
+            
             if not self.__extra_numbers and not self.__missing_numbers:
                 break
+        self._node_list[self.__my_ip]['completed'] = True
+        self._send_all_nodes(self.__my_ip,'completed_node',{'node':self.__my_ip})
+        self._stop()
+
+
                 
-        
-        self._stop_server()
           
     def __handle_numbers(self):
         self.__my_numbers.extend(self.__extra_numbers)
@@ -179,6 +203,7 @@ class Client(Node):
             self.__handle_numbers()
             self.__show_info()
 
+
                     
     def __show_info(self):
         os.system('clear')
@@ -191,13 +216,14 @@ class Client(Node):
 
 def main():
     print('---- CLIENT ---')
-    name = input('My name : ')
-    # name = 'Santiago'
+    # name = input('My name : ')
+    name = 'Santiago'
     # my_port = int(input('my port: '))
     my_port = 5000
     hostname = input('Server ip: ')
     os.system('clear')
     client = Client(hostname, 5000, name, my_port)
+    client.start()
 
 if __name__ == '__main__':
     main()
