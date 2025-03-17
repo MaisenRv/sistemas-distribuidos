@@ -3,11 +3,11 @@ from node import Node
 
 class Client(Node):
 
-    def __init__(self,hostname:str, server_port:int, name:str, my_port:int) -> None:
+    def __init__(self,hostname:str, server_port:int) -> None:
         super().__init__()
         # client info
-        self.__name = name
-        self.__my_port = my_port
+        self.__name = input('My name : ')
+        self.__my_port = 5000
         self.__my_ip = socket.gethostbyname(socket.gethostname())
         self.__my_numbers = []
         self.__extra_numbers = []
@@ -95,6 +95,8 @@ class Client(Node):
             
             elif waiting_info['state'] == 'completed_node':
                 self._node_list[waiting_info['data']['node']]['completed'] = True
+                os.system('clear')
+                self.__show_info()
                 self._print_nodes()
 
             elif waiting_info['state'] == 'start':
@@ -213,17 +215,3 @@ class Client(Node):
         print(f'Extra numbers: {self.__extra_numbers}')
         print(f'handle numbers: {self.__my_numbers}')
 
-
-def main():
-    print('---- CLIENT ---')
-    # name = input('My name : ')
-    name = 'Santiago'
-    # my_port = int(input('my port: '))
-    my_port = 5000
-    hostname = input('Server ip: ')
-    os.system('clear')
-    client = Client(hostname, 5000, name, my_port)
-    client.start()
-
-if __name__ == '__main__':
-    main()

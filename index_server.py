@@ -3,12 +3,20 @@ from node import Node
 
 class IndexServer(Node):
 
-    def __init__(self, hostname:str, port:int ,client_number:int) -> None:
+    def __init__(self, port:int ,client_number:int) -> None:
         super().__init__()
+        # server Info
+        self.__my_hostname = socket.gethostbyname(socket.gethostname())
+        self.__my_port = port
+        self.__client_number = client_number
+
+
         self.__current_node = ''
         self.__numbers = self.__generate_numbers(client_number)
-        self.__register(hostname,port,client_number)
         
+    def start(self):
+        self.__register(self.__my_hostname ,self.__my_port,self.__client_number)
+
     def __register(self,hostname:str, port:int, client_number:int) -> None:
         #start server
         server_socket = socket.socket()
@@ -62,12 +70,3 @@ class IndexServer(Node):
             selected_numbers.append(self.__numbers.pop())
             #random.shuffle(self.__numbers)
         return selected_numbers
-
-
-
-def main():
-    ip = socket.gethostbyname(socket.gethostname())
-    server = IndexServer(ip,5000,5)
-
-if __name__ == '__main__':
-    main()

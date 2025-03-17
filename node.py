@@ -15,7 +15,7 @@ class Node:
 
     def _print_nodes(self):
         for node in self._node_list:
-            print(f'{node} : {self._node_list[node]}')
+            print(f'{node} : {self._node_list[node]['name']}')
     
     def _make_request(self, hostname:str , port:int ,state:str, data:dict) -> dict:
         request_socket = socket.socket()
