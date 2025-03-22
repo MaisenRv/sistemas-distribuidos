@@ -3,11 +3,11 @@ from core.node import Node
 
 class Client(Node):
 
-    def __init__(self,hostname:str, server_port:int) -> None:
+    def __init__(self,client_port:int ,server_hostname:str, server_port:int) -> None:
         super().__init__()
         # client info
         self.__name = input('My name : ')
-        self.__my_port = 5000
+        self.__my_port = client_port
         self.__my_ip = socket.gethostbyname(socket.gethostname())
         self.__my_numbers = []
         self.__extra_numbers = []
@@ -15,10 +15,11 @@ class Client(Node):
         self.__my_numbers_copy = []
         self.__max_clients = 0
         # server info
-        self.__server_info = {'hostname':hostname, 'port':server_port}
+        self.__server_info = {'hostname':server_hostname, 'port':server_port}
 
     def start(self):
-        self.__connect_index_server(self.__server_info['hostname'],self.__server_info['port'])
+        self.__connect_index_server()
+
         if len(self._node_list) < self.__max_clients:
             self.__update_list()
 
@@ -29,10 +30,10 @@ class Client(Node):
         time.sleep(2)
         self.__resolve_numbers()
 
-    def __connect_index_server(self,hostname:str, server_port:int):
+    def __connect_index_server(self):
         res = self._make_request(
-            hostname,
-            server_port,
+            self.__server_info['hostname'],
+            self.__server_info['port'],
             '',
             {
                 'name': self.__name,
@@ -120,19 +121,17 @@ class Client(Node):
             )
 
             numbers_checked = self.__check_numbers(res['data']['extra_numbers'])
-
             if not numbers_checked:
                 continue
             
             print(f"Found this numbers : {numbers_checked} in client {(self._node_list[client]['name']).upper()}")
-            time.sleep(2)
+            time.sleep(5)
 
             swap_numbers = []
-            
             numbers_checked_copy = numbers_checked.copy()
+
             if len(numbers_checked) > len(self.__extra_numbers):
                 numbers_checked.clear()
-
                 for i in range(len(self.__extra_numbers)):
                     swap_numbers.append(self.__extra_numbers[i])
                     numbers_checked.append(numbers_checked_copy[i])
@@ -140,7 +139,6 @@ class Client(Node):
 
                 self.__swap_numbers(client,self._node_list[client]['port'],numbers_checked,swap_numbers)
                 time.sleep(1)
-
                 if not self.__extra_numbers and self.__missing_numbers:
                     self.__swap_numbers(client,self._node_list[client]['port'],numbers_checked_copy,[])
                     time.sleep(1)
@@ -181,7 +179,6 @@ class Client(Node):
         for mn in self.__missing_numbers:
             if mn in numbers:
                 numbers_checked.append(mn)
-            
         return numbers_checked
     
     def __swap_numbers(self, hostname:str, port:int, get_numbers:list , send_numbers:list):

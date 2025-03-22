@@ -8,20 +8,20 @@ class IndexServer(Node):
         # server Info
         self.__my_hostname = socket.gethostbyname(socket.gethostname())
         self.__my_port = port
-        self.__client_number = client_number
-
+        self.__max_clients_number = client_number
 
         self.__current_node = ''
-        self.__numbers = self.__generate_numbers(client_number)
+        self.__numbers = self.__generate_numbers()
         
     def start(self):
-        self.__register(self.__my_hostname ,self.__my_port,self.__client_number)
+        print('----- SERVER -----')
+        self.__register()
 
-    def __register(self,hostname:str, port:int, client_number:int) -> None:
+    def __register(self) -> None:
         #start server
         server_socket = socket.socket()
-        server_socket.bind((hostname,port))
-        server_socket.listen(client_number)
+        server_socket.bind((self.__my_hostname,self.__my_port))
+        server_socket.listen()
         print(f'Start numbers : {self.__numbers}')
         while True:
             conn,address = server_socket.accept()
@@ -40,25 +40,29 @@ class IndexServer(Node):
                 {
                     'nodes':self._node_list, 
                     'numbers': self.__get_selected_numbers(),
-                    'max_clients':client_number
+                    'max_clients':self.__max_clients_number
                 }
             )
 
             # Show info
             os.system('clear')
+            print('----- SERVER -----')
             print(f'Remaining numbers : {self.__numbers}')
             print('--- NODES NOW ---')
             self._print_nodes()
             conn.close()
+
+            # update nodes
             self._send_all_nodes(self.__current_node,'update',{'nodes':self._node_list})
+
             if not self.__numbers:
                 break
         server_socket.close()
     
 
-    def __generate_numbers(self,client_number:int) -> list:
+    def __generate_numbers(self) -> list:
         numbers = []
-        for i in range(client_number):
+        for i in range(self.__max_clients_number):
             for j in range(11):
                 numbers.append(j)
         random.shuffle(numbers)
