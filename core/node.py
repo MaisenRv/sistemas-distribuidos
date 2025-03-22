@@ -1,5 +1,5 @@
 import socket
-from message import Message
+from core.message import Message
 
 class Node:
     HEADER_LENGTH = 10

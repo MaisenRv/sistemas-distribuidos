@@ -1,6 +1,6 @@
 import argparse, os
-from client import Client
-from index_server import IndexServer
+from client.client import Client
+from server.index_server import IndexServer
 
 def main():
     parser = argparse.ArgumentParser(description='Arguments: ')
@@ -9,7 +9,7 @@ def main():
     
     if args.type == 'server':
         os.system('clear')
-        i_server = IndexServer(5000,5)
+        i_server = IndexServer(5000,3)
         i_server.start()
     if args.type == 'client':
         os.system('clear')

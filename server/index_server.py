@@ -1,5 +1,5 @@
 import random, socket, os
-from node import Node
+from core.node import Node
 
 class IndexServer(Node):
 

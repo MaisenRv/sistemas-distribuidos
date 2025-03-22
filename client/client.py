@@ -1,5 +1,5 @@
 import socket, time, os
-from node import Node
+from core.node import Node
 
 class Client(Node):
 
@@ -26,7 +26,7 @@ class Client(Node):
         if ips[0] != self.__my_ip:
             self.__listen()
             return
-        time.sleep(5)
+        time.sleep(2)
         self.__resolve_numbers()
 
     def __connect_index_server(self,hostname:str, server_port:int):
@@ -125,7 +125,7 @@ class Client(Node):
                 continue
             
             print(f"Found this numbers : {numbers_checked} in client {(self._node_list[client]['name']).upper()}")
-            time.sleep(10)
+            time.sleep(2)
 
             swap_numbers = []
             
@@ -161,9 +161,6 @@ class Client(Node):
         self._send_all_nodes(self.__my_ip,'completed_node',{'node':self.__my_ip})
         self._stop()
 
-
-                
-          
     def __handle_numbers(self):
         self.__my_numbers.extend(self.__extra_numbers)
         self.__extra_numbers.clear()
