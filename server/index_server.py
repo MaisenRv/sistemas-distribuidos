@@ -13,7 +13,7 @@ class IndexServer(Node):
         self.__current_node = ''
         self.__numbers = self.__generate_numbers()
         
-    def start(self):
+    def start(self) -> None:
         print('----- SERVER -----')
         self.__register()
 

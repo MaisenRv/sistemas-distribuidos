@@ -3,7 +3,7 @@ from core.message import Message
 
 class Node:
     HEADER_LENGTH = 10
-    def __init__(self):
+    def __init__(self) -> None:
         self._node_list = {}
     
     def _receive(self, conn:socket) -> dict:
@@ -13,7 +13,7 @@ class Node:
         message = Message.create_message(self.HEADER_LENGTH, state, data)
         conn.send(message)
 
-    def _print_nodes(self):
+    def _print_nodes(self) -> None:
         for node in self._node_list:
             print(f'{node} : {self._node_list[node]['name']}')
     
@@ -25,7 +25,7 @@ class Node:
         request_socket.close()
         return response
     
-    def _send_all_nodes(self, current_node:str, state:str, data:dict):
+    def _send_all_nodes(self, current_node:str, state:str, data:dict) -> None:
         for client in self._node_list:
             if current_node != client and self._node_list[client]['completed'] == False:
                 broadcast_socket = socket.socket()
@@ -34,7 +34,7 @@ class Node:
                 broadcast_socket.close()
     
 
-    def _stop(self):
+    def _stop(self) -> None:
         for client in self._node_list:
             if not self._node_list[client]['completed']:
                 last_connection = socket.socket()

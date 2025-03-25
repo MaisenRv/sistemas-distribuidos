@@ -17,7 +17,7 @@ class Client(Node):
         # server info
         self.__server_info = {'hostname':server_hostname, 'port':server_port}
 
-    def start(self):
+    def start(self) -> None:
         self.__connect_index_server()
 
         if len(self._node_list) < self.__max_clients:
@@ -30,7 +30,7 @@ class Client(Node):
         time.sleep(2)
         self.__resolve_numbers()
 
-    def __connect_index_server(self):
+    def __connect_index_server(self) -> None:
         res = self._make_request(
             self.__server_info['hostname'],
             self.__server_info['port'],
@@ -53,7 +53,7 @@ class Client(Node):
         print('-- FIRST CONNECT --')
         self._print_nodes()
 
-    def __update_list(self):
+    def __update_list(self) -> None:
         client_socket = socket.socket()
         client_socket.bind((self.__my_ip,self.__my_port))
         client_socket.listen(2)
@@ -73,7 +73,7 @@ class Client(Node):
         client_socket.close()
 
 
-    def __listen(self):
+    def __listen(self) -> None:
         client_socket = socket.socket()
         client_socket.bind((self.__my_ip,self.__my_port))
         client_socket.listen(2)
@@ -108,7 +108,7 @@ class Client(Node):
             conn.close()
         client_socket.close()
     
-    def __resolve_numbers(self):
+    def __resolve_numbers(self) -> None:
         for client in self._node_list:
             if (client == self.__my_ip) or (self._node_list[client]['completed'] == True):
                 continue
@@ -159,7 +159,7 @@ class Client(Node):
         self._send_all_nodes(self.__my_ip,'completed_node',{'node':self.__my_ip})
         self._stop()
 
-    def __handle_numbers(self):
+    def __handle_numbers(self) -> None:
         self.__my_numbers.extend(self.__extra_numbers)
         self.__extra_numbers.clear()
         self.__missing_numbers.clear()
@@ -174,14 +174,14 @@ class Client(Node):
         self.__my_numbers.sort()
         self.__show_info()
     
-    def __check_numbers(self, numbers:list):
+    def __check_numbers(self, numbers:list) -> list:
         numbers_checked = []
         for mn in self.__missing_numbers:
             if mn in numbers:
                 numbers_checked.append(mn)
         return numbers_checked
     
-    def __swap_numbers(self, hostname:str, port:int, get_numbers:list , send_numbers:list):
+    def __swap_numbers(self, hostname:str, port:int, get_numbers:list , send_numbers:list) -> None:
         res = self._make_request(
             hostname,
             port,
@@ -201,7 +201,7 @@ class Client(Node):
 
 
                     
-    def __show_info(self):
+    def __show_info(self) -> None:
         os.system('clear')
         print(f' ---- {self.__name.upper()} ---- ')
         print(f'My numbers : {self.__my_numbers_copy}')
