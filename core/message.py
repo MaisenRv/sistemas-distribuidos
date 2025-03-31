@@ -3,7 +3,7 @@ import pickle, socket
 class Message:
 
     @staticmethod
-    def create_message(header_length:int, state:str, data:dict):
+    def create_message(header_length:int, state:str, data:dict) -> bytes:
         formated_data = Message.format_message(state,data)
         return Message.serialized_data(header_length,formated_data)
     

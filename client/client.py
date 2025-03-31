@@ -173,6 +173,30 @@ class Client(Node):
                     self.__my_numbers.remove(i)
         self.__my_numbers.sort()
         self.__show_info()
+
+    # def __handle_letters(self) -> None:
+    #     self.__my_numbers.extend(self.__extra_numbers)
+    #     self.__extra_numbers.clear()
+    #     self.__missing_numbers.clear()
+
+    #     # Generar alfabeto completo para identificar faltantes
+    #     alphabet = [chr(i) for i in range(ord('a'), ord('z') + 1)]
+
+    #     for letter in alphabet:
+    #         times_repeated = self.__my_numbers.count(letter)
+    #         if times_repeated == 0:
+    #             self.__missing_numbers.append(letter)
+    #         elif times_repeated > 1:
+    #             for _ in range(times_repeated - 1):
+    #                 self.__extra_numbers.append(letter)
+    #                 self.__my_numbers.remove(letter)
+
+    #     self.__my_numbers.sort()
+    #     self.__show_info()
+
+
+
+
     
     def __check_numbers(self, numbers:list) -> list:
         numbers_checked = []

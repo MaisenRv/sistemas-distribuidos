@@ -11,6 +11,7 @@ class IndexServer(Node):
         self.__max_clients_number = client_number
 
         self.__current_node = ''
+        # self.__letters = self.__generate_letters()
         self.__numbers = self.__generate_numbers()
         
     def start(self) -> None:
@@ -22,6 +23,7 @@ class IndexServer(Node):
         server_socket = socket.socket()
         server_socket.bind((self.__my_hostname,self.__my_port))
         server_socket.listen()
+        # print(f'Start numbers : {self.__letters}')
         print(f'Start numbers : {self.__numbers}')
         while True:
             conn,address = server_socket.accept()
@@ -67,6 +69,22 @@ class IndexServer(Node):
                 numbers.append(j)
         random.shuffle(numbers)
         return numbers
+
+    # def __generate_letters(self) -> list:
+    #     letters = []
+    #     alphabet = [chr(i) for i in range(ord('a'), ord('z') + 1)]
+    #     for j in range(self.__max_clients_number):
+    #         letters.extend(alphabet)
+    #     random.shuffle(letters)
+    #     return letters
+
+    # def __get_selected_letters(self) -> list:
+        # selected_numbers = []
+        # alphabet = [chr(i) for i in range(ord('a'), ord('z') + 1)]
+        # for i in range(len(alphabet)):
+            # selected_numbers.append(self.__letters.pop())
+            # random.shuffle(self.__numbers)
+        # return selected_numbers
 
     def __get_selected_numbers(self) -> list:
         selected_numbers = []
